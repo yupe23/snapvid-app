@@ -113,7 +113,9 @@ def index():
 @app.route("/mp3")
 def mp3_page():
     return render_template("mp3.html")
-
+@app.route("/google8d8ce31a6193e415.html")
+def google_verify():
+    return send_file("google8d8ce31a6193e415.html")
 
 @app.route("/api/download", methods=["POST"])
 def start_download():
