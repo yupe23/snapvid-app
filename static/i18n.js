@@ -3,8 +3,8 @@ const TRANSLATIONS = {
     dir: "rtl",
     mode_video: "🎬 فيديو",
     mode_mp3: "🎵 MP3",
-    input_label_video: "الصق رابط الفيديو (فيسبوك / إنستغرام)",
-    input_label_mp3: "الصق رابط الفيديو لاستخراج الصوت (فيسبوك / إنستغرام)",
+    input_label_video: "الصق رابط الفيديو (YouTube / TikTok / Instagram / Facebook)",
+    input_label_mp3: "الصق رابط الفيديو لاستخراج الصوت (YouTube / TikTok / Instagram / Facebook)",
     btn_download: "تنزيل الآن",
     btn_extract: "استخراج MP3",
     btn_starting: "جارٍ البدء...",
@@ -27,14 +27,14 @@ const TRANSLATIONS = {
     downloaded_label: "تم التنزيل",
     mp3_ready_label: "MP3 · جاهز",
     save_btn: "حفظ",
-    youtube_note: "روابط يوتيوب غير مدعومة في هذا التطبيق."
+    youtube_note: "يدعم التطبيق الآن روابط YouTube و TikTok و Instagram و Facebook."
   },
   fr: {
     dir: "ltr",
     mode_video: "🎬 Vidéo",
     mode_mp3: "🎵 MP3",
-    input_label_video: "Collez le lien de la vidéo (Facebook / Instagram)",
-    input_label_mp3: "Collez le lien pour extraire l'audio (Facebook / Instagram)",
+    input_label_video: "Collez le lien de la vidéo (YouTube / TikTok / Instagram / Facebook)",
+    input_label_mp3: "Collez le lien pour extraire l'audio (YouTube / TikTok / Instagram / Facebook)",
     btn_download: "Télécharger",
     btn_extract: "Extraire en MP3",
     btn_starting: "Démarrage...",
@@ -57,14 +57,14 @@ const TRANSLATIONS = {
     downloaded_label: "Téléchargé",
     mp3_ready_label: "MP3 · prêt",
     save_btn: "Enregistrer",
-    youtube_note: "Les liens YouTube ne sont pas pris en charge dans cette application."
+    youtube_note: "L'application prend désormais en charge les liens YouTube, TikTok, Instagram et Facebook."
   },
   en: {
     dir: "ltr",
     mode_video: "🎬 Video",
     mode_mp3: "🎵 MP3",
-    input_label_video: "Paste the video link (Facebook / Instagram)",
-    input_label_mp3: "Paste the video link to extract audio (Facebook / Instagram)",
+    input_label_video: "Paste the video link (YouTube / TikTok / Instagram / Facebook)",
+    input_label_mp3: "Paste the video link to extract audio (YouTube / TikTok / Instagram / Facebook)",
     btn_download: "Download Now",
     btn_extract: "Extract MP3",
     btn_starting: "Starting...",
@@ -87,7 +87,7 @@ const TRANSLATIONS = {
     downloaded_label: "Downloaded",
     mp3_ready_label: "MP3 · ready",
     save_btn: "Save",
-    youtube_note: "YouTube links are not supported in this app."
+    youtube_note: "The app now supports YouTube, TikTok, Instagram, and Facebook links."
   }
 };
 

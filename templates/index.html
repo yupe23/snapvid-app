@@ -87,6 +87,11 @@
   .bar-fill{ height:100%; width:0%; background:var(--red); border-radius:6px; transition:width .3s; }
   .progress-pct{ text-align:left; direction:ltr; font-size:11px; color:var(--red); margin-top:8px; font-family:'JetBrains Mono',monospace; }
 
+  .platform-pill{
+    display:inline-flex; align-items:center; gap:6px; margin-top:8px;
+    background:rgba(21,101,192,.16); color:#d6eaff; border:1px solid var(--blue);
+    border-radius:999px; padding:5px 10px; font-size:11px; font-family:'Cairo',sans-serif;
+  }
   .list-card{
     background:var(--gray); border:1px solid var(--gray-line); border-radius:14px; padding:10px;
     display:none; gap:10px; align-items:center;
@@ -123,8 +128,9 @@
     </div>
 
     <div class="input-card">
-      <div class="label" data-i18n="input_label_video">الصق رابط الفيديو (فيسبوك / إنستغرام)</div>
+      <div class="label" data-i18n="input_label_video">الصق رابط الفيديو (YouTube / TikTok / Instagram / Facebook)</div>
       <input id="urlInput" type="text" placeholder="https://...">
+      <div class="platform-pill" id="platformPill">🔎 Platform: —</div>
     </div>
 
     <button class="btn-primary" id="downloadBtn">
@@ -165,9 +171,41 @@ const progressPct = document.getElementById('progressPct');
 const listCard = document.getElementById('listCard');
 const fileTitle = document.getElementById('fileTitle');
 const saveBtn = document.getElementById('saveBtn');
+const platformPill = document.getElementById('platformPill');
 
 let currentJobId = null;
 let pollTimer = null;
+
+function normalizeYouTubeUrl(url) {
+  const trimmed = (url || '').trim();
+  if (!trimmed) return trimmed;
+
+  const shortMatch = trimmed.match(/youtu\.be\/([A-Za-z0-9_-]{11})/i);
+  if (shortMatch) return `https://www.youtube.com/watch?v=${shortMatch[1]}`;
+
+  const videoMatch = trimmed.match(/[?&]v=([A-Za-z0-9_-]{11})/i);
+  if (videoMatch) return `https://www.youtube.com/watch?v=${videoMatch[1]}`;
+
+  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/i);
+  if (shortsMatch) return `https://www.youtube.com/watch?v=${shortsMatch[1]}`;
+
+  return trimmed;
+}
+
+function detectPlatform(url) {
+  const normalized = normalizeYouTubeUrl(url);
+  const host = (normalized || '').toLowerCase();
+  if (/youtube\.com|youtu\.be|m\.youtube\.com/.test(host)) return { icon: '▶', name: 'YouTube' };
+  if (/tiktok\.com/.test(host)) return { icon: '♪', name: 'TikTok' };
+  if (/instagram\.com/.test(host)) return { icon: '📷', name: 'Instagram' };
+  if (/facebook\.com|fb\.watch/.test(host)) return { icon: 'f', name: 'Facebook' };
+  return { icon: '🔗', name: 'Unsupported' };
+}
+
+function updatePlatformPill(url) {
+  const platform = detectPlatform(url);
+  platformPill.textContent = `${platform.icon} Platform: ${platform.name}`;
+}
 
 function t(key) {
   const lang = getLang();
@@ -186,8 +224,10 @@ function resetUI() {
   progressPct.textContent = "0%";
 }
 
+urlInput.addEventListener('input', () => updatePlatformPill(urlInput.value.trim()));
+
 downloadBtn.addEventListener('click', async () => {
-  const url = urlInput.value.trim();
+  const url = normalizeYouTubeUrl(urlInput.value.trim());
   if (!url) {
     setMsg(t('err_empty_url'), "error");
     return;
