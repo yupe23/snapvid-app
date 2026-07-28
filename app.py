@@ -1,13 +1,15 @@
-from flask import Flask, request, jsonify, send_file, render_template
+from flask import Flask, request, jsonify, send_file, render_template, Response
 import yt_dlp
 import os
 import uuid
 import threading
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote
+from xml.sax.saxutils import escape
 
 app = Flask(__name__)
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+PUBLIC_SITEMAP_PATHS = ("/", "/app", "/mp3")
 
 # نخزن حالة كل عملية تنزيل هنا: progress, status, filename
 jobs = {}
@@ -106,6 +108,24 @@ def validate_url(url):
     if platform in {"youtube", "tiktok", "instagram", "facebook"}:
         return platform
     return None
+
+
+def get_production_base_url():
+    domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+    if not domain:
+        return None
+
+    parsed = urlparse(domain if "://" in domain else f"https://{domain}")
+    if parsed.scheme != "https" or not parsed.netloc:
+        return None
+    if parsed.hostname in {"localhost", "127.0.0.1", "0.0.0.0"}:
+        return None
+
+    return f"https://{parsed.netloc}"
+
+
+def build_production_url(path):
+    return f"{get_production_base_url()}{quote(path, safe='/')}"
 
 
 def probe_youtube(url):
@@ -262,6 +282,42 @@ def mp3_page():
 @app.route("/google8d8ce31a6193e415.html")
 def google_verify():
     return send_file("google8d8ce31a6193e415.html")
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /api/",
+        "",
+    ]
+    if get_production_base_url():
+        lines.extend([
+            f"Sitemap: {build_production_url('/sitemap.xml')}",
+            "",
+        ])
+    body = "\n".join(lines)
+    return Response(body, mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    if not get_production_base_url():
+        return Response(status=404)
+
+    urls = "\n".join(
+        f"  <url>\n    <loc>{escape(build_production_url(path))}</loc>\n  </url>"
+        for path in PUBLIC_SITEMAP_PATHS
+    )
+    body = "\n".join([
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        urls,
+        "</urlset>",
+        "",
+    ])
+    return Response(body, mimetype="application/xml")
 
 
 @app.route("/api/download", methods=["POST"])
