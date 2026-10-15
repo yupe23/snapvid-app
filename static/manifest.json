@@ -1,7 +1,7 @@
 {
   "name": "SnapVid",
   "short_name": "SnapVid",
-  "description": "تنزيل فيديوهات وصوت من فيسبوك وإنستغرام",
+  "description": "Download videos and audio from YouTube, TikTok, Instagram, and Facebook",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F0F0F",

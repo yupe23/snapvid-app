@@ -92,7 +92,7 @@ const TRANSLATIONS = {
 };
 
 function getLang() {
-  return localStorage.getItem('snapvid_lang') || 'ar';
+  return window.SNAPVID_LANG || localStorage.getItem('snapvid_lang') || 'ar';
 }
 
 function setLang(code) {

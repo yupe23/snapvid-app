@@ -9,7 +9,79 @@ from xml.sax.saxutils import escape
 app = Flask(__name__)
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-PUBLIC_SITEMAP_PATHS = ("/", "/app", "/mp3")
+SUPPORTED_LANGUAGES = ("ar", "en", "fr")
+PAGE_PATHS = {
+    "home": "",
+    "app": "app",
+    "mp3": "mp3",
+}
+PUBLIC_SITEMAP_PATHS = (
+    "/",
+    "/app",
+    "/mp3",
+    "/ar",
+    "/en",
+    "/fr",
+    "/ar/app",
+    "/en/app",
+    "/fr/app",
+    "/ar/mp3",
+    "/en/mp3",
+    "/fr/mp3",
+)
+SEO_COPY = {
+    "home": {
+        "ar": {
+            "title": "SnapVid - تنزيل الفيديوهات والصوت",
+            "description": "اختر لغتك وابدأ استخدام SnapVid لتنزيل الفيديوهات والصوت من YouTube وTikTok وInstagram وFacebook.",
+            "h1": "SnapVid لتنزيل الفيديوهات والصوت",
+        },
+        "en": {
+            "title": "SnapVid - Download Videos and Audio",
+            "description": "Choose your language and use SnapVid to download videos and audio from YouTube, TikTok, Instagram, and Facebook.",
+            "h1": "SnapVid video and audio downloader",
+        },
+        "fr": {
+            "title": "SnapVid - Télécharger des vidéos et de l'audio",
+            "description": "Choisissez votre langue et utilisez SnapVid pour télécharger des vidéos et de l'audio depuis YouTube, TikTok, Instagram et Facebook.",
+            "h1": "SnapVid pour télécharger des vidéos et de l'audio",
+        },
+    },
+    "app": {
+        "ar": {
+            "title": "تنزيل الفيديوهات - SnapVid",
+            "description": "استخدم SnapVid لتنزيل الفيديوهات من YouTube وTikTok وInstagram وFacebook مباشرة من المتصفح.",
+            "h1": "تنزيل الفيديوهات من YouTube وTikTok وInstagram وFacebook",
+        },
+        "en": {
+            "title": "Video Downloader - SnapVid",
+            "description": "Use SnapVid to download videos from YouTube, TikTok, Instagram, and Facebook directly in your browser.",
+            "h1": "Download videos from YouTube, TikTok, Instagram, and Facebook",
+        },
+        "fr": {
+            "title": "Téléchargeur de vidéos - SnapVid",
+            "description": "Utilisez SnapVid pour télécharger des vidéos depuis YouTube, TikTok, Instagram et Facebook directement dans votre navigateur.",
+            "h1": "Télécharger des vidéos depuis YouTube, TikTok, Instagram et Facebook",
+        },
+    },
+    "mp3": {
+        "ar": {
+            "title": "استخراج MP3 من الفيديو - SnapVid",
+            "description": "استخرج ملفات MP3 من روابط YouTube وTikTok وInstagram وFacebook باستخدام SnapVid.",
+            "h1": "استخراج MP3 من روابط YouTube وTikTok وInstagram وFacebook",
+        },
+        "en": {
+            "title": "Extract MP3 from Video - SnapVid",
+            "description": "Extract MP3 audio from YouTube, TikTok, Instagram, and Facebook links with SnapVid.",
+            "h1": "Extract MP3 from YouTube, TikTok, Instagram, and Facebook links",
+        },
+        "fr": {
+            "title": "Extraire un MP3 d'une vidéo - SnapVid",
+            "description": "Extrayez l'audio MP3 depuis des liens YouTube, TikTok, Instagram et Facebook avec SnapVid.",
+            "h1": "Extraire un MP3 depuis des liens YouTube, TikTok, Instagram et Facebook",
+        },
+    },
+}
 
 # نخزن حالة كل عملية تنزيل هنا: progress, status, filename
 jobs = {}
@@ -111,11 +183,11 @@ def validate_url(url):
 
 
 def get_production_base_url():
-    domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
-    if not domain:
+    base_url = os.environ.get("PUBLIC_BASE_URL", "").strip()
+    if not base_url:
         return None
 
-    parsed = urlparse(domain if "://" in domain else f"https://{domain}")
+    parsed = urlparse(base_url if "://" in base_url else f"https://{base_url}")
     if parsed.scheme != "https" or not parsed.netloc:
         return None
     if parsed.hostname in {"localhost", "127.0.0.1", "0.0.0.0"}:
@@ -126,6 +198,43 @@ def get_production_base_url():
 
 def build_production_url(path):
     return f"{get_production_base_url()}{quote(path, safe='/')}"
+
+
+def build_localized_path(page, lang):
+    page_path = PAGE_PATHS[page]
+    return f"/{lang}/{page_path}" if page_path else f"/{lang}"
+
+
+def build_hreflang_urls(page):
+    urls = {
+        lang: build_production_url(build_localized_path(page, lang))
+        for lang in SUPPORTED_LANGUAGES
+    }
+    default_path = f"/{PAGE_PATHS[page]}" if PAGE_PATHS[page] else "/"
+    urls["x-default"] = build_production_url(default_path)
+    return urls
+
+
+def build_seo_context(page, lang):
+    copy = SEO_COPY[page][lang]
+    path = build_localized_path(page, lang)
+    canonical_url = build_production_url(path) if get_production_base_url() else None
+    return {
+        "lang": lang,
+        "dir": "rtl" if lang == "ar" else "ltr",
+        "title": copy["title"],
+        "description": copy["description"],
+        "canonical_url": canonical_url,
+        "h1": copy["h1"],
+        "hreflang_urls": build_hreflang_urls(page) if get_production_base_url() else {},
+    }
+
+
+def render_public_template(template_name, page, lang="ar"):
+    return render_template(
+        template_name,
+        seo=build_seo_context(page, lang),
+    )
 
 
 def probe_youtube(url):
@@ -266,17 +375,38 @@ def run_download_audio(job_id, url):
 
 @app.route("/")
 def splash():
-    return render_template("splash.html")
+    return render_public_template("splash.html", "home")
+
+
+@app.route("/<lang>")
+def localized_splash(lang):
+    if lang not in SUPPORTED_LANGUAGES:
+        return Response(status=404)
+    return render_public_template("splash.html", "home", lang)
 
 
 @app.route("/app")
 def index():
-    return render_template("index.html")
+    return render_public_template("index.html", "app")
+
+
+@app.route("/<lang>/app")
+def localized_index(lang):
+    if lang not in SUPPORTED_LANGUAGES:
+        return Response(status=404)
+    return render_public_template("index.html", "app", lang)
 
 
 @app.route("/mp3")
 def mp3_page():
-    return render_template("mp3.html")
+    return render_public_template("mp3.html", "mp3")
+
+
+@app.route("/<lang>/mp3")
+def localized_mp3_page(lang):
+    if lang not in SUPPORTED_LANGUAGES:
+        return Response(status=404)
+    return render_public_template("mp3.html", "mp3", lang)
 
 
 @app.route("/google8d8ce31a6193e415.html")

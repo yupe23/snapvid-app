@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ seo.lang }}" dir="{{ seo.dir }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,7 +7,11 @@
 <link rel="manifest" href="/static/manifest.json">
 <link rel="icon" href="/static/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-<title>SnapVid</title>
+<title>{{ seo.title }}</title>
+<meta name="description" content="{{ seo.description }}">
+{% if seo.canonical_url %}<link rel="canonical" href="{{ seo.canonical_url }}">{% endif %}
+{% for hreflang, href in seo.hreflang_urls.items() %}<link rel="alternate" hreflang="{{ hreflang }}" href="{{ href }}">
+{% endfor %}
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap');
 
@@ -77,9 +81,11 @@
   }
   .lang-option:hover{ border-color:var(--blue); background:rgba(21,101,192,.12); }
   .lang-option .code{ color:var(--muted); font-size:11px; font-weight:400; font-family:'JetBrains Mono',monospace; }
+  .seo-title{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 </style>
 </head>
 <body>
+<h1 class="seo-title">{{ seo.h1 }}</h1>
 
 <div class="phone">
   <div class="screen" style="position:relative;">
@@ -111,6 +117,8 @@
 </div>
 
 <script>
+  window.SNAPVID_LANG = "{{ seo.lang }}";
+
   // بعد ثانيتين، بدل شاشة الشعار بشاشة اختيار اللغة
   setTimeout(() => {
     document.getElementById('logoView').classList.add('hide');
